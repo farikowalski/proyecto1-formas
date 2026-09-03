@@ -33,6 +33,7 @@ Otros comandos:
 | `python main.py --generar-referencias` | recrear las referencias ideales |
 | `python capturar_referencias.py` | tomar las referencias con tus propios objetos |
 | `python -m pruebas.prueba_pipeline` | prueba de extremo a extremo, sin cámara |
+| `python diagnostico_camara.py` | buscar qué backend e índice de cámara funcionan |
 
 Teclas en la ventana principal: `q`/`ESC` salir · `g` guardar la imagen
 anotada en `capturas/` · `espacio` pausar.
@@ -177,6 +178,7 @@ conocida del método y no como error del pipeline.
 main.py                      aplicación en vivo
 entrenar.py                  genera el dataset y entrena el k-NN
 capturar_referencias.py      toma las referencias con la webcam
+diagnostico_camara.py        busca un backend de camara que funcione
 vision/config.py             parámetros y colores por clase
 vision/procesamiento.py      gris -> threshold -> morfología -> contornos
 vision/embeddings.py         contorno -> vector de forma
@@ -188,6 +190,21 @@ vision/interfaz.py           barras de desplazamiento
 vision/referencias/          una imagen por clase
 pruebas/prueba_pipeline.py   prueba de extremo a extremo sin cámara
 ```
+
+## Si la cámara no abre
+
+`python diagnostico_camara.py` prueba las combinaciones de backend
+(`CAP_MSMF`, `CAP_DSHOW`, `CAP_ANY`) e índice, e informa cuál funciona. El
+índice se ajusta con `--camara N` en `main.py`.
+
+En Windows, además, hay que habilitar **Configuración → Privacidad y
+seguridad → Cámara → Permitir que las aplicaciones de escritorio accedan a
+la cámara**, y cerrar cualquier programa que tenga tomada la cámara (Zoom,
+Teams, Discord): el acceso es exclusivo.
+
+Sin cámara, el pipeline completo se puede mostrar igual con
+`python main.py --imagen <foto>`, que abre las mismas ventanas y barras de
+desplazamiento sobre una imagen fija.
 
 ## Ambiente controlado
 
