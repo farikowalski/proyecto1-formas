@@ -14,6 +14,11 @@ from . import config, embeddings
 
 LADO = 400
 
+# Clases que se pueden dibujar como poligono regular. El resto se genera
+# aumentando su imagen de referencia, asi agregar una cuarta clase no
+# obliga a escribir un generador nuevo.
+LADOS_POR_CLASE = {"triangulo": 3, "cuadrado": 4}
+
 
 def _lienzo():
     return np.full((LADO, LADO), 255, dtype=np.uint8)
@@ -34,15 +39,16 @@ def _dibujar(clase, rng):
     radio = rng.uniform(0.22, 0.42) * LADO
     rotacion = rng.uniform(0, 2 * np.pi)
 
-    if clase == "triangulo":
-        cv2.fillPoly(lienzo, [_poligono_regular(3, radio, rotacion)], 0)
-    elif clase == "cuadrado":
-        cv2.fillPoly(lienzo, [_poligono_regular(4, radio, rotacion)], 0)
+    lados = LADOS_POR_CLASE.get(clase)
+    if lados:
+        cv2.fillPoly(lienzo, [_poligono_regular(lados, radio, rotacion)], 0)
     elif clase == "circulo":
         centro = (LADO // 2, LADO // 2)
         cv2.circle(lienzo, centro, int(radio), 0, -1)
     else:
-        raise ValueError(f"clase desconocida: {clase}")
+        # Clase sin generador sintetico propio: sus muestras salen de
+        # aumentar su imagen de referencia (ver construir()).
+        return None
     return lienzo
 
 
@@ -101,7 +107,7 @@ def _aumentar_referencia(imagen, rng):
 def construir(clases, muestras_por_clase=300, semilla=0, directorio_referencias=None):
     """Devuelve (X, y, nombres) con los embeddings y su clase.
 
-    X: matriz (n, 7) de embeddings de Hu.
+    X: matriz (n, embeddings.DIMENSION) de descriptores de forma.
     y: vector (n,) de indices de clase.
     nombres: lista de nombres de clase en el orden de los indices.
     """
@@ -112,8 +118,13 @@ def construir(clases, muestras_por_clase=300, semilla=0, directorio_referencias=
     fotos = {}
     directorio = directorio_referencias or config.DIR_REFERENCIAS
     for ruta in list(directorio.glob("*.png")) + list(directorio.glob("*.jpg")):
-        if ruta.stem in nombres:
-            fotos.setdefault(ruta.stem, []).append(cv2.imread(str(ruta)))
+        if ruta.stem not in nombres:
+            continue
+        foto = cv2.imread(str(ruta))
+        if foto is None:
+            print(f"AVISO: no se pudo leer {ruta}, se ignora.")
+            continue
+        fotos.setdefault(ruta.stem, []).append(foto)
 
     vectores, etiquetas = [], []
     for indice, clase in enumerate(nombres):
@@ -122,13 +133,21 @@ def construir(clases, muestras_por_clase=300, semilla=0, directorio_referencias=
         while generadas < muestras_por_clase and intentos < muestras_por_clase * 5:
             intentos += 1
             propias = fotos.get(clase)
-            # Mezcla: la mitad de las muestras salen de las fotos de referencia.
-            if propias and rng.random() < 0.5:
+            dibujada = None if propias and rng.random() < 0.5 else _dibujar(clase, rng)
+            if dibujada is not None:
+                imagen = _deformar(dibujada, rng)
+            elif propias:
+                # Mezcla: la mitad de las muestras salen de las imagenes de
+                # referencia (y el total, si la clase no tiene generador).
                 imagen = _aumentar_referencia(
                     propias[rng.integers(len(propias))], rng
                 )
             else:
-                imagen = _deformar(_dibujar(clase, rng), rng)
+                raise ValueError(
+                    f"la clase '{clase}' no tiene generador sintetico ni imagen "
+                    f"en {directorio}: agregar una referencia con "
+                    f"capturar_referencias.py"
+                )
 
             contorno = _contorno_de(imagen)
             if contorno is None:
@@ -137,6 +156,14 @@ def construir(clases, muestras_por_clase=300, semilla=0, directorio_referencias=
             etiquetas.append(indice)
             generadas += 1
 
+        if generadas < muestras_por_clase:
+            print(f"AVISO: solo se generaron {generadas}/{muestras_por_clase} "
+                  f"muestras de '{clase}'.")
+
+    if not vectores:
+        raise ValueError(
+            "no se pudo generar ninguna muestra: revisar vision/referencias/"
+        )
     X = np.vstack(vectores).astype(np.float32)
     y = np.array(etiquetas, dtype=np.int32)
     return X, y, nombres

@@ -2,9 +2,9 @@
 
 Se implementa con numpy para no agregar dependencias: el conjunto de
 entrenamiento es chico y la prediccion es una distancia euclidea contra
-unos pocos miles de vectores de 7 dimensiones.
+unos pocos miles de vectores de dimension embeddings.DIMENSION.
 
-Las 7 componentes de Hu tienen rangos muy distintos entre si, por eso se
+Las componentes del embedding tienen rangos muy distintos entre si, por eso se
 estandarizan (media 0, desvio 1) con los estadisticos del entrenamiento
 antes de medir distancias.
 """

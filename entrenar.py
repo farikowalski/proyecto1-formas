@@ -1,6 +1,6 @@
 """Entrena el clasificador de formas sobre los embeddings de Hu.
 
-    python entrenar.py                 # 400 muestras por clase
+    python entrenar.py                 # 600 muestras por clase
     python entrenar.py --muestras 800 --k 7
 
 Guarda el modelo en modelo/modelo.npz e imprime exactitud y matriz de
@@ -8,6 +8,7 @@ confusion sobre un conjunto de prueba separado.
 """
 
 import argparse
+import sys
 
 import numpy as np
 
@@ -33,11 +34,13 @@ def imprimir_confusion(matriz, nombres):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--muestras", type=int, default=400,
+    parser.add_argument("--muestras", type=int, default=600,
                         help="muestras generadas por clase")
     parser.add_argument("--k", type=int, default=5, help="vecinos del k-NN")
     parser.add_argument("--semilla", type=int, default=0)
     args = parser.parse_args()
+    if args.muestras < 1 or args.k < 1:
+        parser.error("--muestras y --k tienen que ser >= 1")
 
     print(f"Generando {args.muestras} muestras por clase para {config.CLASES}...")
     X, y, nombres = dataset.construir(
@@ -60,7 +63,8 @@ def main():
 
     ruta = modelo.guardar()
     print(f"\nModelo guardado en {ruta}")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

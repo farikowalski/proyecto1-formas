@@ -1,17 +1,23 @@
 """Pipeline de procesamiento: gris -> threshold -> morfologia -> contornos."""
 
 import cv2
-import numpy as np
 
 
 def recortar_roi(imagen, roi_relativa):
-    """Recorta la region de interes expresada en fracciones del cuadro."""
+    """Recorta la region de interes expresada en fracciones del cuadro.
+
+    El enunciado admite las dos variantes del ambiente controlado: que la
+    escena sea la imagen completa, o que se recorte programaticamente el
+    rectangulo de la ROI descartando el resto. Cualquier fraccion fuera de
+    [0, 1] o invertida se corrige a un recorte valido en vez de reventar mas
+    adelante en cvtColor con una imagen vacia.
+    """
     alto, ancho = imagen.shape[:2]
-    x1, y1, x2, y2 = roi_relativa
-    px1, py1 = int(x1 * ancho), int(y1 * alto)
-    px2, py2 = int(x2 * ancho), int(y2 * alto)
-    px2 = max(px2, px1 + 1)
-    py2 = max(py2, py1 + 1)
+    x1, y1, x2, y2 = (min(max(float(v), 0.0), 1.0) for v in roi_relativa)
+    px1 = min(int(x1 * ancho), ancho - 1)
+    py1 = min(int(y1 * alto), alto - 1)
+    px2 = min(max(int(x2 * ancho), px1 + 1), ancho)
+    py2 = min(max(int(y2 * alto), py1 + 1), alto)
     return imagen[py1:py2, px1:px2], (px1, py1)
 
 

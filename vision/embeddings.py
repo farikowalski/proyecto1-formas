@@ -8,23 +8,28 @@ de magnitud, asi que se comprimen con la transformacion logaritmica habitual:
 
 Cuidado importante: en figuras muy simetricas (un circulo, un cuadrado
 perfecto) los momentos de orden alto valen exactamente cero, y ahi el
-logaritmo explota o se vuelve indefinido. Medido sobre este proyecto, h3..h7
-saltan entre 0 y +-30 segun el ruido del cuadro. Incluso h2 es degenerado:
-vale cero exacto en un cuadrado o un circulo ideal. El unico momento estable
+logaritmo explota o se vuelve indefinido. Medido sobre 200 circulos con el
+ruido de camara del generador, h4 recorre todo el rango 0..12 (desvio 5.62) y
+h6 salta de 0 a 11.74, mientras un circulo ideal da cero exacto en h2..h7.
+El tope de esos saltos lo pone _TOPE_LOG, mas abajo. El unico momento estable
 en estas tres clases es h1, que ademas las separa por si solo (triangulo
-0.714, cuadrado 0.777, circulo 0.797, con desvio del orden de 0.002).
+0.715, cuadrado 0.778, circulo 0.797, con desvio del orden de 0.001).
 
 Por eso el embedding toma h1 y lo completa con descriptores geometricos
 clasicos, tambien invariantes a rotacion y escala.
 
 Componentes del vector (dimension 6):
 
-    0  log-Hu h1                            tri .71  cua .78  cir .80
-    1  circularidad      4*pi*A / P^2       tri .60  cua .79  cir 1.0
-    2  convexidad        A / A_envolvente   ~1 en las tres, cae con ruido
-    3  llenado del rectangulo minimo        tri .50  cua 1.0  cir .79
-    4  llenado del circulo minimo           tri .41  cua .64  cir 1.0
-    5  vertices del poligono aproximado /10 tri .3   cua .4   cir >=.7
+    0  log-Hu h1                            tri .715 cua .778 cir .797
+    1  circularidad      4*pi*A / P^2       tri .55  cua .71  cir .88
+    2  convexidad        A / A_envolvente   tri .98  cua .99  cir .99
+    3  llenado del rectangulo minimo        tri .51  cua .96  cir .79
+    4  llenado del circulo minimo           tri .43  cua .63  cir .94
+    5  vertices del poligono aproximado /10 tri .30  cua .40  cir .80
+
+Los valores son las medias medidas sobre el dataset; los limites teoricos del
+continuo (circularidad 1.0 en un circulo) no se alcanzan porque el contorno
+esta discretizado en pixeles.
 """
 
 import cv2
