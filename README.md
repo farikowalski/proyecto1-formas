@@ -1,6 +1,6 @@
 # Proyecto 1 — Detección y clasificación de formas
 
-Visión artificial · Universidad Austral · Franco Kowalski
+Visión artificial · Franco Kowalski
 
 Detección y clasificación en tiempo real de **triángulos, cuadrados y círculos**
 sobre la imagen de la webcam, en ambiente controlado (figuras oscuras sobre
